@@ -1,152 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Push Notification System</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin-top: 50px;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Push Notification System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
 
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      margin: 10px;
-      width: 300px;
-    }
+        input,
+        button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px;
+            width: 300px;
+        }
 
-    button {
-      cursor: pointer;
-    }
+        button {
+            cursor: pointer;
+        }
 
-    #notifications {
-      margin-top: 30px;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-      text-align: left;
-    }
+        #notifications {
+            margin-top: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: left;
+        }
 
-    .notification {
-      background-color: #f0f0f0;
-      border-left: 4px solid #007bff;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-    }
+        .notification {
+            background-color: #f0f0f0;
+            border-left: 4px solid #007bff;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
 
-    .notification strong {
-      display: block;
-      font-size: 1.1em;
-    }
-  </style>
+        .notification strong {
+            display: block;
+            font-size: 1.1em;
+        }
+    </style>
 </head>
 
 <body>
-  <h2>Push Notification System</h2>
+    <h2>Push Notification System</h2>
 
-  <input type="text" id="nameInput" placeholder="Enter your Title" />
-  <br />
-  <input type="text" id="messageInput" placeholder="Enter your message" />
-  <br />
-  <button onclick="sendNotification()">Send Notification</button>
+    <input type="text" id="nameInput" placeholder="Enter your Title" />
+    <br />
+    <input type="text" id="messageInput" placeholder="Enter your message" />
+    <br />
+    <button onclick="sendNotification()">Send Notification</button>
 
-  <script>
-    let ws;
+    <script>
+        let ws;
 
-    function connectWebSocket() {
-      console.log("🔵 Connecting to WebSocket Server...");
-      ws = new WebSocket("https://690dcde8-4314-41f0-8533-f079d0124e3e-00-655b53tve3qx.pike.replit.dev");
+        function connectWebSocket() {
+            console.log("🔵 Connecting to WebSocket Server...");
+            ws = new WebSocket("https://690dcde8-4314-41f0-8533-f079d0124e3e-00-655b53tve3qx.pike.replit.dev");
 
-      ws.onopen = () => console.log("✅ WebSocket Connected!");
-      ws.onerror = (err) => console.error("❌ WebSocket Error:", err);
-      ws.onclose = () => {
-        console.warn("⚠️ WebSocket Disconnected. Reconnecting...");
-        setTimeout(connectWebSocket, 3000);
-      };
+            ws.onopen = () => console.log("✅ WebSocket Connected!");
+            ws.onerror = (err) => console.error("❌ WebSocket Error:", err);
+            ws.onclose = () => {
+                console.warn("⚠️ WebSocket Disconnected. Reconnecting...");
+                setTimeout(connectWebSocket, 3000);
+            };
 
-      ws.onmessage = (event) => {
-        if (event.data instanceof Blob) {
-          event.data.text().then((text) => {
-            console.log("📥 Received (converted):", text);
-            showInPageNotification(text);
-          });
-        } else {
-          console.log("📥 Received:", event.data);
-          showInPageNotification(event.data);
+            ws.onmessage = (event) => {
+                if (event.data instanceof Blob) {
+                    event.data.text().then((text) => {
+                        console.log("📥 Received (converted):", text);
+                        showInPageNotification(text);
+                    });
+                } else {
+                    console.log("📥 Received:", event.data);
+                    showInPageNotification(event.data);
+                }
+            };
         }
-      };
-    }
 
-    function requestPermission() {
-      if (Notification.permission === "default") {
-        Notification.requestPermission().then(permission => {
-          if (permission !== "granted") {
-            alert("Please enable notifications in your browser settings.");
-          }
-        });
-      } else if (Notification.permission === "denied") {
-        alert("Notifications are blocked. Please enable them in your browser settings.");
-      }
-    }
+        function requestPermission() {
+            if (Notification.permission === "default") {
+                Notification.requestPermission().then(permission => {
+                    if (permission !== "granted") {
+                        alert("Please enable notifications in your browser settings.");
+                    }
+                });
+            } else if (Notification.permission === "denied") {
+                alert("Notifications are blocked. Please enable them in your browser settings.");
+            }
+        }
 
-    function sendNotification() {
-      const name = document.getElementById("nameInput").value.trim();
-      const message = document.getElementById("messageInput").value.trim();
+        function sendNotification() {
+            const name = document.getElementById("nameInput").value.trim();
+            const message = document.getElementById("messageInput").value.trim();
 
-      if (!name || !message) {
-        alert("Please enter both name and message.");
-        return;
-      }
+            if (!name || !message) {
+                alert("Please enter both name and message.");
+                return;
+            }
 
-      if (!ws || ws.readyState !== WebSocket.OPEN) {
-        alert("WebSocket not connected.");
-        return;
-      }
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert("WebSocket not connected.");
+                return;
+            }
 
-      if (Notification.permission !== "granted") {
-        requestPermission();
-        return;
-      }
+            if (Notification.permission !== "granted") {
+                requestPermission();
+                return;
+            }
 
-      const fullMessage = `${name}: ${message}`;
-      ws.send(fullMessage);
-    }
+            const fullMessage = `${name}: ${message}`;
+            ws.send(fullMessage);
+        }
 
-    function showInPageNotification(data) {
-      let title = "New Message";
-      let body = data;
+        function showInPageNotification(data) {
+            let title = "New Message";
+            let body = data;
 
-      if (data.includes(":")) {
-        const [sender, ...rest] = data.split(":");
-        title = sender.trim();
-        body = rest.join(":").trim();
-      }
+            if (data.includes(":")) {
+                const [sender, ...rest] = data.split(":");
+                title = sender.trim();
+                body = rest.join(":").trim();
+            }
 
-      // System notification
-      try {
-        new Notification(title, {
-          body: body,
-          icon: "https://cdn-icons-png.flaticon.com/512/1827/1827349.png"
-        });
-      } catch (error) {
-        console.warn("System Notification failed.");
-      }
+            // System notification
+            try {
+                new Notification(title, {
+                    body: body,
+                    icon: "https://cdn-icons-png.flaticon.com/512/1827/1827349.png"
+                });
+            } catch (error) {
+                console.warn("System Notification failed.");
+            }
 
-      // In-page notification
-      const div = document.createElement("div");
-      div.className = "notification";
-      div.innerHTML = `<strong>${title}</strong>${body}`;
-      document.getElementById("notifications").prepend(div);
-    }
+            // In-page notification
+            const div = document.createElement("div");
+            div.className = "notification";
+            div.innerHTML = `<strong>${title}</strong>${body}`;
+            document.getElementById("notifications").prepend(div);
+        }
 
-    window.onload = () => {
-      requestPermission();
-      connectWebSocket();
-    };
-  </script>
+        window.onload = () => {
+            requestPermission();
+            connectWebSocket();
+        };
+    </script>
 </body>
+
 </html>
