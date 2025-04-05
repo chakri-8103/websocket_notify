@@ -33,7 +33,6 @@
 
             ws.onmessage = (event) => {
                 console.log("📥 [MESSAGE] From Server:", event.data);
-                alert("🚨 Alert: " + event.data); // Show alert box
                 showNotification(event.data);
             };
         }
