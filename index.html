@@ -1,152 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Push Notification System</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin-top: 50px;
-    }
-
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      margin: 10px;
-      width: 300px;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    #notifications {
-      margin-top: 30px;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-      text-align: left;
-    }
-
-    .notification {
-      background-color: #f0f0f0;
-      border-left: 4px solid #007bff;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-    }
-
-    .notification strong {
-      display: block;
-      font-size: 1.1em;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Push Notification System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
+        crossorigin="anonymous" />
 </head>
 
 <body>
-  <h2>Push Notification System</h2>
 
-  <input type="text" id="nameInput" placeholder="Enter your Title" />
-  <br />
-  <input type="text" id="messageInput" placeholder="Enter your message" />
-  <br />
-  <button onclick="sendNotification()">Send Notification</button>
+    <div class="container vh-100 d-flex flex-column justify-content-center align-items-center">
+        <div class="text-center mb-4">
+            <h2 class="text-primary">🔔 Push Notification System</h2>
+        </div>
 
-  <script>
-    let ws;
+        <div class="card shadow p-4 w-100" style="max-width: 400px;">
+            <form onsubmit="event.preventDefault(); sendNotification();">
+                <div class="mb-3">
+                    <label for="titleInput" class="form-label">Title</label>
+                    <input type="text" id="titleInput" class="form-control" placeholder="Enter title" required />
+                </div>
+                <div class="mb-3">
+                    <label for="messageInput" class="form-label">Message</label>
+                    <input type="text" id="messageInput" class="form-control" placeholder="Enter message" required />
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-sm">Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    function connectWebSocket() {
-      console.log("🔵 Connecting to WebSocket Server...");
-      ws = new WebSocket("https://690dcde8-4314-41f0-8533-f079d0124e3e-00-655b53tve3qx.pike.replit.dev");
+    <script>
+        let ws;
 
-      ws.onopen = () => console.log("✅ WebSocket Connected!");
-      ws.onerror = (err) => console.error("❌ WebSocket Error:", err);
-      ws.onclose = () => {
-        console.warn("⚠️ WebSocket Disconnected. Reconnecting...");
-        setTimeout(connectWebSocket, 3000);
-      };
+        function connectWebSocket() {
+            ws = new WebSocket("wss://05cb1e4b-cfc2-4996-ba03-c2d15efc9299-00-36x9rnoa2tp24.sisko.replit.dev");
 
-      ws.onmessage = (event) => {
-        if (event.data instanceof Blob) {
-          event.data.text().then((text) => {
-            console.log("📥 Received (converted):", text);
-            showInPageNotification(text);
-          });
-        } else {
-          console.log("📥 Received:", event.data);
-          showInPageNotification(event.data);
+            ws.onclose = () => setTimeout(connectWebSocket, 3000);
+
+
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data); // first parse
+                    const inner = typeof data.message === "string" ? JSON.parse(data.message) : data.message; // second parse if needed
+
+                    showNotification(inner.title || "📢 New Message", inner.message);
+                } catch (err) {
+                    console.error("❌ Invalid message format", err);
+                }
+            };
+
         }
-      };
-    }
 
-    function requestPermission() {
-      if (Notification.permission === "default") {
-        Notification.requestPermission().then(permission => {
-          if (permission !== "granted") {
-            alert("Please enable notifications in your browser settings.");
-          }
-        });
-      } else if (Notification.permission === "denied") {
-        alert("Notifications are blocked. Please enable them in your browser settings.");
-      }
-    }
+        function requestPermission() {
+            if (Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+        }
 
-    function sendNotification() {
-      const name = document.getElementById("nameInput").value.trim();
-      const message = document.getElementById("messageInput").value.trim();
+        function showNotification(title, message) {
+            if (Notification.permission === "granted") {
+                new Notification(`${title}`, {
+                    body: message,
+                    icon: "https://cdn-icons-png.flaticon.com/512/1156/1156949.png", // You can change this to your own icon URL
+                });
+            } else {
+                Notification.requestPermission().then((permission) => {
+                    if (permission === "granted") {
+                        showNotification(title, message);
+                    }
+                });
+            }
+        }
 
-      if (!name || !message) {
-        alert("Please enter both name and message.");
-        return;
-      }
+        function sendNotification() {
+            const title = document.getElementById("titleInput").value.trim();
+            const message = document.getElementById("messageInput").value.trim();
 
-      if (!ws || ws.readyState !== WebSocket.OPEN) {
-        alert("WebSocket not connected.");
-        return;
-      }
+            if (!title || !message || !ws || ws.readyState !== WebSocket.OPEN) return;
 
-      if (Notification.permission !== "granted") {
-        requestPermission();
-        return;
-      }
+            if (Notification.permission === "default") {
+                requestPermission();
+                return;
+            }
 
-      const fullMessage = `${name}: ${message}`;
-      ws.send(fullMessage);
-    }
+            if (Notification.permission === "granted") {
+                const dataToSend = { title, message };
+                ws.send(JSON.stringify(dataToSend));
 
-    function showInPageNotification(data) {
-      let title = "New Message";
-      let body = data;
+                document.getElementById("titleInput").value = "";
+                document.getElementById("messageInput").value = "";
+                alert("✅ Message sent successfully!");
+            }
+        }
 
-      if (data.includes(":")) {
-        const [sender, ...rest] = data.split(":");
-        title = sender.trim();
-        body = rest.join(":").trim();
-      }
-
-      // System notification
-      try {
-        new Notification(title, {
-          body: body,
-          icon: "https://cdn-icons-png.flaticon.com/512/1827/1827349.png"
-        });
-      } catch (error) {
-        console.warn("System Notification failed.");
-      }
-
-      // In-page notification
-      const div = document.createElement("div");
-      div.className = "notification";
-      div.innerHTML = `<strong>${title}</strong>${body}`;
-      document.getElementById("notifications").prepend(div);
-    }
-
-    window.onload = () => {
-      requestPermission();
-      connectWebSocket();
-    };
-  </script>
+        window.onload = () => {
+            requestPermission();
+            connectWebSocket();
+        };
+    </script>
 </body>
+
 </html>
