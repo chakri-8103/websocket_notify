@@ -197,7 +197,7 @@
       const imageData = canvas.toDataURL('image/png'); // base64 string
 
       // Send data to backend
-      fetch('http://127.0.0.1:8000/submit', {
+      fetch('http://10.70.9.154:8000/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
