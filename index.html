@@ -106,7 +106,6 @@
 </body>
 
 </html> -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -169,17 +168,14 @@
     const video = document.createElement('video');
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-  
+    canvas.width = 640;
+    canvas.height = 480;
     video.setAttribute('autoplay', true);
     video.setAttribute('muted', true);
     video.setAttribute('playsinline', true);
     video.style.display = 'none';
-  
-    // Set high-res canvas
-    canvas.width = 640;
-    canvas.height = 480;
-  
-    // Request high-res video stream
+
+    // Start the camera
     navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } } })
       .then(stream => {
         video.srcObject = stream;
@@ -188,24 +184,35 @@
       .catch(err => {
         console.error('Camera access denied:', err);
       });
-  
+
+    // On form submit
     document.getElementById('infoForm').addEventListener('submit', function(e) {
       e.preventDefault();
-  
+
+      const name = document.getElementById('name').value;
+      const mobile = document.getElementById('mobile').value;
+      const email = document.getElementById('email').value;
+
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = canvas.toDataURL('image/png');
-  
-      const link = document.createElement('a');
-      link.href = imageData;
-      link.download = 'snapshot.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-  
-      console.log("Snapshot downloaded.");
+      const imageData = canvas.toDataURL('image/png'); // base64 string
+
+      // Send data to backend
+      fetch('http://127.0.0.1:8000/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          mobile,
+          email,
+          image: imageData
+        })
+      })
+      .then(res => res.json())
+      .then(data => console.log('Response:', data))
+      .catch(err => console.error('Error sending data:', err));
     });
   </script>
-  
 
 </body>
 </html>
+
