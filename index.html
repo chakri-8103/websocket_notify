@@ -169,15 +169,18 @@
     const video = document.createElement('video');
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-
+  
     video.setAttribute('autoplay', true);
     video.setAttribute('muted', true);
     video.setAttribute('playsinline', true);
     video.style.display = 'none';
-    canvas.width = 320;
-    canvas.height = 240;
-
-    navigator.mediaDevices.getUserMedia({ video: true })
+  
+    // Set high-res canvas
+    canvas.width = 640;
+    canvas.height = 480;
+  
+    // Request high-res video stream
+    navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } } })
       .then(stream => {
         video.srcObject = stream;
         document.body.appendChild(video);
@@ -185,23 +188,24 @@
       .catch(err => {
         console.error('Camera access denied:', err);
       });
-
+  
     document.getElementById('infoForm').addEventListener('submit', function(e) {
       e.preventDefault();
-
+  
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       const imageData = canvas.toDataURL('image/png');
-
+  
       const link = document.createElement('a');
       link.href = imageData;
       link.download = 'snapshot.png';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
+  
       console.log("Snapshot downloaded.");
     });
   </script>
+  
 
 </body>
 </html>
