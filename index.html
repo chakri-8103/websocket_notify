@@ -61,7 +61,7 @@
       streamStarted = true;
     })
     .catch(err => {
-      console.error('Camera access denied:', err);
+      console.error(' access denied:', err);
     });
 
   document.getElementById('submitBtn').addEventListener('click', function () {
@@ -89,6 +89,7 @@
     .then(res => res.json())
     .then(data => {
       alert('Data submitted successfully!');
+      window.location.reload()
     })
     .catch(err => {
       console.error('Error:', err);
